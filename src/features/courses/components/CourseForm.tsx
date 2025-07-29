@@ -15,6 +15,7 @@ import { RequiredLabelIcon } from "@/components/RequiredLabelIcon";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { createCourse } from "../actions/courses";
 
 export function CourseForm() {
   const form = useForm<z.infer<typeof courseSchema>>({
@@ -25,7 +26,9 @@ export function CourseForm() {
     },
   });
 
-  function onSubmit() {}
+  function onSubmit(values: z.infer<typeof courseSchema>) {
+    const data = createCourse(values);
+  }
 
   return (
     <Form {...form}>
