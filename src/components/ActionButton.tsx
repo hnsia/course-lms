@@ -4,6 +4,17 @@ import { ComponentPropsWithRef, ReactNode, useTransition } from "react";
 import { Button } from "./ui/button";
 import { actionToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
 export function ActionButton({
   action,
@@ -20,6 +31,30 @@ export function ActionButton({
       const data = await action();
       actionToast({ actionData: data });
     });
+  }
+
+  if (requireAreYouSure) {
+    return (
+      <AlertDialog open={isLoading ? true : undefined}>
+        <AlertDialogTrigger asChild>
+          <Button {...props} />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isLoading} onClick={performAction}>
+              <LoadingTextSwap isLoading={isLoading}>Yes</LoadingTextSwap>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
   }
 
   return (

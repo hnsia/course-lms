@@ -5,7 +5,7 @@ import { courseSchema } from "../schemas/courses";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/services/clerk";
 import { canCreateCourses, canDeleteCourses } from "../permissions/courses";
-import { insertCourse } from "../db/courses";
+import { insertCourse, deleteCourse as deleteCourseDB } from "../db/courses";
 
 export async function createCourse(unsafeData: z.infer<typeof courseSchema>) {
   const { success, data } = courseSchema.safeParse(unsafeData);
@@ -24,7 +24,7 @@ export async function deleteCourse(id: string) {
     return { error: true, message: "Error deleting your course" };
   }
 
-  await deleteCourse(id);
+  await deleteCourseDB(id);
 
   return { error: false, message: "Successfuly deleted your course" };
 }

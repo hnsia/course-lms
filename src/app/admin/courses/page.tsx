@@ -36,7 +36,6 @@ async function getCourses() {
     .select({
       id: DbCourseTable.id,
       name: DbCourseTable.name,
-      description: DbCourseTable.description,
       sectionsCount: countDistinct(CourseSectionTable),
       lessonsCount: countDistinct(LessonTable),
       studentsCount: countDistinct(UserCourseAccessTable),
