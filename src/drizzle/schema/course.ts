@@ -3,16 +3,18 @@ import { pgTable, text } from "drizzle-orm/pg-core";
 import { id, createdAt, updatedAt } from "../schemaHelper";
 import { CourseProductTable } from "./courseProduct";
 import { UserCourseAccessTable } from "./userCourseAccess";
+import { CourseSectionTable } from "./courseSection";
 
 export const CourseTable = pgTable("courses", {
-    id,
-    name: text().notNull(),
-    description: text().notNull(),
-    createdAt,
-    updatedAt,
-})
+  id,
+  name: text().notNull(),
+  description: text().notNull(),
+  createdAt,
+  updatedAt,
+});
 
 export const CourseRelationships = relations(CourseTable, ({ many }) => ({
-    courseProducts: many(CourseProductTable),
-    userCourseAccess: many(UserCourseAccessTable)
-}))
+  courseProducts: many(CourseProductTable),
+  userCourseAccess: many(UserCourseAccessTable),
+  courseSections: many(CourseSectionTable),
+}));
