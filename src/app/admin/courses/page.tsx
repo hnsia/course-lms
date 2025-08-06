@@ -14,6 +14,7 @@ import {
 import { asc, countDistinct, eq } from "drizzle-orm";
 import { getUserCourseAccessGlobalTag } from "@/features/courses/db/cache/userCourseAccess";
 import { getCourseSectionGlobalTag } from "@/features/courseSections/db/cache";
+import { getLessonGlobalTag } from "@/features/lessons/db/cache/lessons";
 
 export default async function CoursesPage() {
   const courses = await getCourses();
@@ -35,7 +36,8 @@ async function getCourses() {
   cacheTag(
     getCourseGlobalTag(),
     getUserCourseAccessGlobalTag(),
-    getCourseSectionGlobalTag()
+    getCourseSectionGlobalTag(),
+    getLessonGlobalTag()
   );
 
   return db

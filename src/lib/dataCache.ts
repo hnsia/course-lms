@@ -3,7 +3,8 @@ type CACHE_TAG =
   | "users"
   | "courses"
   | "userCourseAccess"
-  | "courseSections";
+  | "courseSections"
+  | "lessons";
 
 export function getGlobalTag(tag: CACHE_TAG) {
   return `global:${tag}` as const;
