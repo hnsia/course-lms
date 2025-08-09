@@ -8,8 +8,10 @@ import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseForm } from "@/features/courses/components/CourseForm";
+import { DialogTrigger } from "@/components/ui/dialog";
+import { SectionFormDialog } from "@/features/courseSections/components/SectionFormDialog";
 
 export default async function EditCoursePage({
   params,
@@ -29,7 +31,16 @@ export default async function EditCoursePage({
           <TabsTrigger value="lessons">Lessons</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
         </TabsList>
-        <TabsContent value="lessons">Lessons</TabsContent>
+        <TabsContent value="lessons">
+          <Card>
+            <CardHeader className="flex items-center flex-row justify-between">
+              <CardTitle>Sections</CardTitle>
+              <SectionFormDialog>
+                <DialogTrigger></DialogTrigger>
+              </SectionFormDialog>
+            </CardHeader>
+          </Card>
+        </TabsContent>
         <TabsContent value="details">
           <Card>
             <CardHeader>
