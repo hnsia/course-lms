@@ -12,6 +12,8 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseForm } from "@/features/courses/components/CourseForm";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { SectionFormDialog } from "@/features/courseSections/components/SectionFormDialog";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default async function EditCoursePage({
   params,
@@ -35,8 +37,12 @@ export default async function EditCoursePage({
           <Card>
             <CardHeader className="flex items-center flex-row justify-between">
               <CardTitle>Sections</CardTitle>
-              <SectionFormDialog>
-                <DialogTrigger></DialogTrigger>
+              <SectionFormDialog courseId={course.id}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <PlusIcon /> New Section
+                  </Button>
+                </DialogTrigger>
               </SectionFormDialog>
             </CardHeader>
           </Card>
