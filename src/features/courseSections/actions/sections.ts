@@ -47,12 +47,12 @@ export async function updateSection(
   return { error: false, message: "Successfuly updated your section" };
 }
 
-export async function deleteCourse(id: string) {
+export async function deleteSection(id: string) {
   if (!canDeleteCourseSections(await getCurrentUser())) {
     return { error: true, message: "Error deleting your section" };
   }
 
-  await deleteSectionDB(id);
+  await deleteSectionDb(id);
 
   return { error: false, message: "Successfuly deleted your section" };
 }
