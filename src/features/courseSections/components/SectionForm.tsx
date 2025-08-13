@@ -24,10 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createSection, updateSection } from "../actions/sections";
 
 export function SectionForm({
   section,
   courseId,
+  onSuccess,
 }: {
   section?: {
     id: string;
@@ -35,6 +37,7 @@ export function SectionForm({
     status: CourseSectionStatus;
   };
   courseId: string;
+  onSuccess?: () => void;
 }) {
   const form = useForm<z.infer<typeof sectionSchema>>({
     resolver: zodResolver(sectionSchema),
@@ -46,9 +49,12 @@ export function SectionForm({
 
   async function onSubmit(values: z.infer<typeof sectionSchema>) {
     const action =
-      course == null ? createCourse : updateCourse.bind(null, course.id);
+      section == null
+        ? createSection.bind(null, courseId)
+        : updateSection.bind(null, section.id);
     const data = await action(values);
     actionToast({ actionData: data });
+    if (!data.error) onSuccess?.();
   }
 
   return (
