@@ -1,8 +1,9 @@
 "use client";
 
-import { ReactNode, useOptimistic } from "react";
-import { DndContext } from "@dnd-kit/core";
+import { ReactNode, useOptimistic, useTransition } from "react";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
+  arrayMove,
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
@@ -10,6 +11,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { GripVerticalIcon } from "lucide-react";
+import { actionToast } from "@/hooks/use-toast";
 
 export function SortableList<T extends { id: string }>({
   items,
@@ -23,8 +25,29 @@ export function SortableList<T extends { id: string }>({
   children: (items: T[]) => ReactNode;
 }) {
   const [optimisticItems, setOptimisticItems] = useOptimistic(items);
+  const [, startTransition] = useTransition();
 
-  function handleDragEnd() {}
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    const activeId = active.id.toString();
+    const overId = over?.id.toString();
+    if (overId == null || activeId == null) return;
+
+    function getNewArray(array: T[], activeId: string, overId: string) {
+      const oldIndex = array.findIndex((section) => section.id === activeId);
+      const newIndex = array.findIndex((section) => section.id === overId);
+      return arrayMove(array, oldIndex, newIndex);
+    }
+
+    startTransition(async () => {
+      setOptimisticItems((items) => getNewArray(items, activeId, overId));
+      const actionData = await onOrderChange(
+        getNewArray(optimisticItems, activeId, overId).map((s) => s.id)
+      );
+
+      actionToast({ actionData });
+    });
+  }
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
