@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useOptimistic, useTransition } from "react";
+import { ReactNode, useId, useOptimistic, useTransition } from "react";
 import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -24,6 +24,7 @@ export function SortableList<T extends { id: string }>({
   ) => Promise<{ error: boolean; message: string }>;
   children: (items: T[]) => ReactNode;
 }) {
+  const dndContextId = useId();
   const [optimisticItems, setOptimisticItems] = useOptimistic(items);
   const [, startTransition] = useTransition();
 
@@ -50,7 +51,7 @@ export function SortableList<T extends { id: string }>({
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext id={dndContextId} onDragEnd={handleDragEnd}>
       <SortableContext
         items={optimisticItems}
         strategy={verticalListSortingStrategy}
