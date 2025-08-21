@@ -37,7 +37,7 @@ export function LessonForm({
     name: string;
   }[];
   onSuccess?: () => void;
-  defaultSectionId: string;
+  defaultSectionId?: string;
   lesson?: {
     id: string;
     name: string;

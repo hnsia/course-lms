@@ -8,6 +8,7 @@ import { LessonFormDialog } from "./LessonFormDialog";
 import { DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ActionButton } from "@/components/ActionButton";
+import { deleteLesson, updateLessonOrders } from "../actions/lessons";
 
 export function SortableLessonList({
   sections,

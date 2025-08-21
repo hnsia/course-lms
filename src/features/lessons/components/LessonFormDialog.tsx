@@ -17,7 +17,7 @@ export function LessonFormDialog({
   children,
 }: {
   children: ReactNode;
-  sections?: { id: string; name: string }[];
+  sections: { id: string; name: string }[];
   defaultSectionId?: string;
   lesson?: {
     id: string;
