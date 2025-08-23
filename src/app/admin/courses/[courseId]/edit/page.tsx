@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { EyeClosed, PlusIcon } from "lucide-react";
 import { SortableSectionList } from "@/features/courseSections/components/SortableSectionList";
 import { cn } from "@/lib/utils";
+import { LessonFormDialog } from "@/features/lessons/components/LessonFormDialog";
+import { SortableLessonList } from "@/features/lessons/components/SortableLessonList";
 
 export default async function EditCoursePage({
   params,
@@ -35,7 +37,7 @@ export default async function EditCoursePage({
           <TabsTrigger value="lessons">Lessons</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
         </TabsList>
-        <TabsContent value="lessons">
+        <TabsContent value="lessons" className="flex flex-col gap-2">
           <Card>
             <CardHeader className="flex items-center flex-row justify-between">
               <CardTitle>Sections</CardTitle>
@@ -54,7 +56,7 @@ export default async function EditCoursePage({
               />
             </CardContent>
           </Card>
-          <hr className="my-4" />
+          <hr className="my-2" />
           {course.courseSections.map((section) => (
             <Card key={section.id}>
               <CardHeader className="flex items-center flex-row justify-between gap-4">

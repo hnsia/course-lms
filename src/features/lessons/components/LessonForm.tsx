@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { createLesson, updateLesson } from "../actions/lessons";
 
 export function LessonForm({
   sections,
@@ -60,9 +61,7 @@ export function LessonForm({
 
   async function onSubmit(values: z.infer<typeof lessonSchema>) {
     const action =
-      section == null
-        ? createSection.bind(null, courseId)
-        : updateSection.bind(null, section.id);
+      lesson == null ? createLesson : updateLesson.bind(null, lesson.id);
     const data = await action(values);
     actionToast({ actionData: data });
     if (!data.error) onSuccess?.();
@@ -168,10 +167,7 @@ export function LessonForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  <RequiredLabelIcon />
-                  Description
-                </FormLabel>
+                <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
                     className="min-h-20 resize-none"
