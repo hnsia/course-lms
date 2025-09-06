@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { courseSchema } from "../schemas/courses";
+import { productSchema } from "../schemas/products";
 import z from "zod";
 import {
   Form,
@@ -16,29 +16,50 @@ import { RequiredLabelIcon } from "@/components/RequiredLabelIcon";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { createCourse, updateCourse } from "../actions/courses";
+import { createProduct, updateProduct } from "../actions/products";
 import { actionToast } from "@/hooks/use-toast";
+import { ProductStatus, productStatuses } from "@/drizzle/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function ProductForm({
-  course,
+  product,
+  courses,
 }: {
-  course?: {
+  product?: {
     id: string;
     name: string;
     description: string;
+    priceInDollars: number;
+    imageUrl: string;
+    status: ProductStatus;
+    courseIds: string[];
   };
+  courses: {
+    id: string;
+    name: string;
+  }[];
 }) {
-  const form = useForm<z.infer<typeof courseSchema>>({
-    resolver: zodResolver(courseSchema),
-    defaultValues: course ?? {
+  const form = useForm<z.infer<typeof productSchema>>({
+    resolver: zodResolver(productSchema),
+    defaultValues: product ?? {
       name: "",
       description: "",
+      courseIds: [],
+      imageUrl: "",
+      priceInDollars: 0,
+      status: "private",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof courseSchema>) {
+  async function onSubmit(values: z.infer<typeof productSchema>) {
     const action =
-      course == null ? createCourse : updateCourse.bind(null, course.id);
+      product == null ? createProduct : updateProduct.bind(null, product.id);
     const data = await action(values);
     actionToast({ actionData: data });
   }
@@ -49,38 +70,102 @@ export function ProductForm({
         onSubmit={form.handleSubmit(onSubmit)}
         className="flex gap-6 flex-col"
       >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                <RequiredLabelIcon />
-                Name
-              </FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                <RequiredLabelIcon />
-                Description
-              </FormLabel>
-              <FormControl>
-                <Textarea className="min-h-20 resize-none" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 items-start">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  <RequiredLabelIcon />
+                  Name
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="priceInDollars"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  <RequiredLabelIcon />
+                  Price
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    {...field}
+                    step={1}
+                    min={0}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  <RequiredLabelIcon />
+                  Image Url
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {productStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="courseIds"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Included Courses</FormLabel>
+                <FormControl>
+                  <Textarea className="min-h-20 resize-none" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <div className="self-end">
           <Button disabled={form.formState.isSubmitting} type="submit">
             Save
