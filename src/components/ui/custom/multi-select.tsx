@@ -41,7 +41,7 @@ export function MultiSelect<Option>({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between h-auto py-1.5 px-2 min-h-9 hover:bg-background"
+          className="justify-between h-auto py-1.5 px-2 min-h-9 hover:bg-background w-full"
         >
           <div className="flex gap-1 flex-wrap">
             {selectedValues.length > 0 ? (

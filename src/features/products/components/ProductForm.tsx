@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/custom/multi-select";
 
 export function ProductForm({
   product,
@@ -152,20 +153,44 @@ export function ProductForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="courseIds"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Included Courses</FormLabel>
-                <FormControl>
-                  <Textarea className="min-h-20 resize-none" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         </div>
+        <FormField
+          control={form.control}
+          name="courseIds"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Included Courses</FormLabel>
+              <FormControl>
+                <MultiSelect
+                  selectPlaceholder="Select courses"
+                  searchPlaceholder="Search courses"
+                  options={courses}
+                  getLabel={(c) => c.name}
+                  getValue={(c) => c.id}
+                  selectedValues={field.value}
+                  onSelectedValuesChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                <RequiredLabelIcon />
+                Description
+              </FormLabel>
+              <FormControl>
+                <Textarea className="min-h-20 resize-none" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="self-end">
           <Button disabled={form.formState.isSubmitting} type="submit">
             Save
