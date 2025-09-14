@@ -103,7 +103,13 @@ export function ProductForm({
                     {...field}
                     step={1}
                     min={0}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    onChange={(e) =>
+                      field.onChange(
+                        isNaN(e.target.valueAsNumber)
+                          ? ""
+                          : e.target.valueAsNumber
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />
