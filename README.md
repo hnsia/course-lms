@@ -1,6 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Setup
+
+1. Configure environment variables by creating a copy of .env.example and renaming it as .env, attach relevant keys.
+
 ## Development commands
+
+1. Run server locally using `npm run dev`
 
 ### Shadcn
 
