@@ -11,7 +11,7 @@ import { getLessonCourseTag } from "@/features/lessons/db/cache/lessons";
 import { wherePublicLessons } from "@/features/lessons/permissions/lessons";
 import { getProductIdTag } from "@/features/products/db/cache";
 import { wherePublicProducts } from "@/features/products/permissions/products";
-import { formatPrice } from "@/lib/formatters";
+import { formatPlural, formatPrice } from "@/lib/formatters";
 import { sumArray } from "@/lib/sumArray";
 import { getUserCoupon } from "@/lib/userCountryHeader";
 import { and, asc, eq } from "drizzle-orm";
@@ -47,7 +47,23 @@ export default async function ProductPage({
             >
               <Price price={product.priceInDollars} />
             </Suspense>
+            <h1 className="text-4xl font-semibold">{product.name}</h1>
+            <div className="text-muted-foreground">
+              {formatPlural(courseCount, {
+                singular: "course",
+                plural: "courses",
+              })}{" "}
+              •{" "}
+              {formatPlural(lessonCount, {
+                singular: "lesson",
+                plural: "lessons",
+              })}
+            </div>
           </div>
+          <div className="text-xl">{product.description}</div>
+          <Suspense fallback={<SkeletonButton />}>
+            <PurchaseButton productId={product.id} />
+          </Suspense>
         </div>
       </div>
     </div>
