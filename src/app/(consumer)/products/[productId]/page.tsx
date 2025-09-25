@@ -1,3 +1,5 @@
+import { SkeletonButton } from "@/components/Skeleton";
+import { Button } from "@/components/ui/button";
 import { db } from "@/drizzle/db";
 import {
   CourseSectionTable,
@@ -10,12 +12,15 @@ import { wherePublicCourseSections } from "@/features/courseSections/permissions
 import { getLessonCourseTag } from "@/features/lessons/db/cache/lessons";
 import { wherePublicLessons } from "@/features/lessons/permissions/lessons";
 import { getProductIdTag } from "@/features/products/db/cache";
+import { userOwnsProduct } from "@/features/products/db/products";
 import { wherePublicProducts } from "@/features/products/permissions/products";
 import { formatPlural, formatPrice } from "@/lib/formatters";
 import { sumArray } from "@/lib/sumArray";
 import { getUserCoupon } from "@/lib/userCountryHeader";
+import { getCurrentUser } from "@/services/clerk";
 import { and, asc, eq } from "drizzle-orm";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -68,6 +73,22 @@ export default async function ProductPage({
       </div>
     </div>
   );
+}
+
+async function PurchaseButton({ productId }: { productId: string }) {
+  const { userId } = await getCurrentUser();
+  const alreadyOwnsProduct =
+    userId != null && (await userOwnsProduct({ userId, productId }));
+
+  if (alreadyOwnsProduct) {
+    return <p>You already own this product</p>;
+  } else {
+    return (
+      <Button className="text-xl h-auto py-4 px-8 rounded-lg" asChild>
+        <Link href={`/products/${productId}/purchase`}>Get Now</Link>
+      </Button>
+    );
+  }
 }
 
 async function Price({ price }: { price: number }) {
