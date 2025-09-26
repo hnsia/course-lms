@@ -66,7 +66,7 @@ export default async function ProductPage({
             </div>
           </div>
           <div className="text-xl">{product.description}</div>
-          <Suspense fallback={<SkeletonButton />}>
+          <Suspense fallback={<SkeletonButton className="h-12 w-36" />}>
             <PurchaseButton productId={product.id} />
           </Suspense>
         </div>
