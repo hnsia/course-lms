@@ -1,5 +1,18 @@
 import { SkeletonButton } from "@/components/Skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { db } from "@/drizzle/db";
 import {
   CourseSectionTable,
@@ -19,7 +32,9 @@ import { sumArray } from "@/lib/sumArray";
 import { getUserCoupon } from "@/lib/userCountryHeader";
 import { getCurrentUser } from "@/services/clerk";
 import { and, asc, eq } from "drizzle-orm";
+import { VideoIcon } from "lucide-react";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -70,6 +85,76 @@ export default async function ProductPage({
             <PurchaseButton productId={product.id} />
           </Suspense>
         </div>
+        <div className="relative aspect-video max-w-lg flex-grow">
+          <Image
+            src={product.imageUrl}
+            fill
+            alt={product.name}
+            className="object-contain rounded-xl"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 items-start">
+        {product.courses.map((course) => (
+          <Card key={course.id}>
+            <CardHeader>
+              <CardTitle>{course.name}</CardTitle>
+              <CardDescription>
+                {formatPlural(course.courseSections.length, {
+                  singular: "section",
+                  plural: "sections",
+                })}{" "}
+                •{" "}
+                {formatPlural(
+                  sumArray(course.courseSections, (s) => s.lessons.length),
+                  {
+                    singular: "lesson",
+                    plural: "lessons",
+                  }
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple">
+                {course.courseSections.map((section) => (
+                  <AccordionItem key={section.id} value={section.id}>
+                    <AccordionTrigger className="flex gap-2">
+                      <div className="flex flex-col flex-grow">
+                        <span className="text-lg">{section.name}</span>
+                        <span className="text-muted-foreground">
+                          {formatPlural(section.lessons.length, {
+                            plural: "lessons",
+                            singular: "lesson",
+                          })}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="flex flex-col gap-2">
+                      {section.lessons.map((lesson) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center gap-2 text-base"
+                        >
+                          <VideoIcon className="size-4" />
+                          {lesson.status === "preview" ? (
+                            <Link
+                              href={`/courses/${course.id}/lessons/${lesson.id}`}
+                              className="underline text-accent"
+                            >
+                              {lesson.name}
+                            </Link>
+                          ) : (
+                            lesson.name
+                          )}
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
