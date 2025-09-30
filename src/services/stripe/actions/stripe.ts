@@ -1,3 +1,5 @@
+"use server";
+
 import { getUserCoupon } from "@/lib/userCountryHeader";
 import { stripeServerClient } from "../stripeServer";
 import { env } from "@/data/env/client";
