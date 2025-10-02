@@ -47,14 +47,24 @@ async function processStripeCheckout(checkoutSession: Stripe.Checkout.Session) {
   if (user == null) throw new Error("User not found");
 
   const courseIds = product.courseProducts.map((cp) => cp.courseId);
-  await addUserCourseAccess({ userId: user.id, courseIds });
-  await insertPurchase({
-    stripeSessionId: checkoutSession.id,
-    pricePaidInCents:
-      checkoutSession.amount_total || product.priceInDollars * 100,
-    productDetails: product,
-    userId: user.id,
-    productId,
+  db.transaction(async (trx) => {
+    try {
+      await addUserCourseAccess({ userId: user.id, courseIds }, trx);
+      await insertPurchase(
+        {
+          stripeSessionId: checkoutSession.id,
+          pricePaidInCents:
+            checkoutSession.amount_total || product.priceInDollars * 100,
+          productDetails: product,
+          userId: user.id,
+          productId,
+        },
+        trx
+      );
+    } catch (error) {
+      trx.rollback();
+      throw error;
+    }
   });
 
   return productId;

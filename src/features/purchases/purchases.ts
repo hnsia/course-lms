@@ -2,10 +2,13 @@ import { db } from "@/drizzle/db";
 import { PurchaseTable } from "@/drizzle/schema";
 import { revalidatePurchaseCache } from "./db/cache";
 
-export async function insertPurchase(data: typeof PurchaseTable.$inferInsert) {
+export async function insertPurchase(
+  data: typeof PurchaseTable.$inferInsert,
+  trx: Omit<typeof db, "$client"> = db
+) {
   const details = data.productDetails;
 
-  const [newPurchase] = await db
+  const [newPurchase] = await trx
     .insert(PurchaseTable)
     .values({
       ...data,
