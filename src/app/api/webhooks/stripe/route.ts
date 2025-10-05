@@ -1,3 +1,4 @@
+import { env } from "@/data/env/server";
 import { db } from "@/drizzle/db";
 import { ProductTable, UserTable } from "@/drizzle/schema";
 import { addUserCourseAccess } from "@/features/courses/db/userCourseAccess";
@@ -28,7 +29,26 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(new URL(redirectUrl, request.url));
 }
 
-export async function POST() {}
+export async function POST(request: NextRequest) {
+  const event = await stripeServerClient.webhooks.constructEvent(
+    await request.text(),
+    request.headers.get("stripe-signature") as string,
+    env.STRIPE_WEBHOOK_SECRET
+  );
+
+  switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded": {
+      try {
+        await processStripeCheckout(event.data.object);
+      } catch {
+        return new Response(null, { status: 500 });
+      }
+    }
+  }
+
+  return new Response(null, { status: 200 });
+}
 
 async function processStripeCheckout(checkoutSession: Stripe.Checkout.Session) {
   const userId = checkoutSession.metadata?.userId;
@@ -71,7 +91,7 @@ async function processStripeCheckout(checkoutSession: Stripe.Checkout.Session) {
 }
 
 async function getProduct(id: string) {
-  return await db.query.ProductTable.findFirst({
+  return db.query.ProductTable.findFirst({
     columns: {
       id: true,
       priceInDollars: true,
@@ -87,7 +107,7 @@ async function getProduct(id: string) {
 }
 
 async function getUser(id: string) {
-  return await db.query.UserTable.findFirst({
+  return db.query.UserTable.findFirst({
     columns: { id: true },
     where: eq(UserTable.id, id),
   });
