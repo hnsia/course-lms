@@ -25,5 +25,7 @@ export async function GET(request: Request) {
 
   await syncClerkUserMetadata(dbUser);
 
+  await new Promise((res) => setTimeout(res, 100));
+
   return NextResponse.redirect(request.headers.get("referer") ?? "/");
 }
