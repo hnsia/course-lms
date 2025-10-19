@@ -1,12 +1,11 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
 import { canRefundPurchases } from "../permissions/purchases";
 import { getCurrentUser } from "@/services/clerk";
 import { stripeServerClient } from "@/services/stripe/stripeServer";
 import { db } from "@/drizzle/db";
-import { getPurchaseIdTag } from "../db/cache";
 import { updatePurchase } from "../db/purchases";
+import { revokeUserCourseAccess } from "@/features/courses/db/userCourseAccess";
 
 export async function refundPurchase(id: string) {
   if (!canRefundPurchases(await getCurrentUser())) {
@@ -16,7 +15,7 @@ export async function refundPurchase(id: string) {
     };
   }
 
-  db.transaction(async (trx) => {
+  const data = await db.transaction(async (trx) => {
     const refundedPurchase = await updatePurchase(
       id,
       { refundedAt: new Date() },
@@ -42,6 +41,7 @@ export async function refundPurchase(id: string) {
             ? session.payment_intent
             : session.payment_intent.id,
       });
+      await revokeUserCourseAccess(refundedPurchase, trx);
     } catch {
       trx.rollback();
       return {
@@ -50,4 +50,6 @@ export async function refundPurchase(id: string) {
       };
     }
   });
+
+  return data ?? { error: false, message: "Successfully refunded purchase" };
 }

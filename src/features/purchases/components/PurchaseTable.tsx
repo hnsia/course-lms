@@ -5,7 +5,6 @@ import {
   SkeletonText,
 } from "@/components/Skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,9 +15,9 @@ import {
 } from "@/components/ui/table";
 import { formatDate, formatPlural, formatPrice } from "@/lib/formatters";
 import Image from "next/image";
-import Link from "next/link";
+import { refundPurchase } from "../actions/purchases";
 
-export function UserPurchaseTable({
+export function PurchaseTable({
   purchases,
 }: {
   purchases: {
