@@ -1,4 +1,13 @@
 import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { db } from "@/drizzle/db";
 import {
   CourseSectionTable,
@@ -7,12 +16,18 @@ import {
   UserCourseAccessTable,
   UserLessonCompleteTable,
 } from "@/drizzle/schema";
+import { getCourseIdTag } from "@/features/courses/db/cache/courses";
 import { getUserCourseAccessUserTag } from "@/features/courses/db/cache/userCourseAccess";
+import { getCourseSectionCourseTag } from "@/features/courseSections/db/cache";
 import { wherePublicCourseSections } from "@/features/courseSections/permissions/sections";
+import { getLessonCourseTag } from "@/features/lessons/db/cache/lessons";
+import { getUserLessonCompleteUserTag } from "@/features/lessons/db/cache/userLessonComplete";
 import { wherePublicLessons } from "@/features/lessons/permissions/lessons";
+import { formatPlural } from "@/lib/formatters";
 import { getCurrentUser } from "@/services/clerk";
 import { and, countDistinct, eq } from "drizzle-orm";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
+import Link from "next/link";
 import { Suspense } from "react";
 
 export default function CoursesPage() {
@@ -33,11 +48,59 @@ async function CourseGrid() {
   if (userId == null) return redirectToSignIn();
 
   const courses = await getUserCourses(userId);
+
+  if (courses.length === 0) {
+    return (
+      <div className="flex flex-col gap-2 items-start">
+        You have no courses yet
+        <Button asChild size="lg">
+          <Link href="/">Browse Courses</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return courses.map((course) => (
+    <Card key={course.id} className="overflow-hidden flex flex-col">
+      <CardHeader>
+        <CardTitle>{course.name}</CardTitle>
+        <CardDescription>
+          {formatPlural(course.sectionsCount, {
+            singular: "section",
+            plural: "sections",
+          })}{" "}
+          •{" "}
+          {formatPlural(course.lessonsCount, {
+            singular: "lesson",
+            plural: "lessons",
+          })}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="line-clamp-3" title={course.description}>
+        {course.description}
+      </CardContent>
+      <div className="flex-grow" />
+      <CardFooter>
+        <Button asChild>
+          <Link href={`/courses/${course.id}`}>View Course</Link>
+        </Button>
+      </CardFooter>
+      <div
+        className="bg-accent h-2 -mt-2"
+        style={{
+          width: `${(course.lessonsComplete / course.lessonsCount) * 100}%`,
+        }}
+      ></div>
+    </Card>
+  ));
 }
 
 async function getUserCourses(userId: string) {
   "use cache";
-  cacheTag(getUserCourseAccessUserTag(userId));
+  cacheTag(
+    getUserCourseAccessUserTag(userId),
+    getUserLessonCompleteUserTag(userId)
+  );
 
   const courses = await db
     .select({
@@ -76,6 +139,14 @@ async function getUserCourses(userId: string) {
     )
     .orderBy(CourseTable.name)
     .groupBy(CourseTable.id);
+
+  courses.forEach((course) => {
+    cacheTag(
+      getCourseIdTag(course.id),
+      getCourseSectionCourseTag(course.id),
+      getLessonCourseTag(course.id)
+    );
+  });
 
   return courses;
 }
