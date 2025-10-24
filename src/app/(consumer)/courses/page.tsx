@@ -1,4 +1,9 @@
 import { PageHeader } from "@/components/PageHeader";
+import {
+  SkeletonArray,
+  SkeletonButton,
+  SkeletonText,
+} from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,7 +40,13 @@ export default function CoursesPage() {
     <div className="container my-6">
       <PageHeader title="My Courses" />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <SkeletonArray amount={3}>
+              <SkeletonCourseCard />
+            </SkeletonArray>
+          }
+        >
           <CourseGrid />
         </Suspense>
       </div>
@@ -93,6 +104,27 @@ async function CourseGrid() {
       ></div>
     </Card>
   ));
+}
+
+function SkeletonCourseCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <SkeletonText className="w-3/4" />
+        </CardTitle>
+        <CardDescription>
+          <SkeletonText className="w-1/2" />
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <SkeletonText rows={3} />
+      </CardContent>
+      <CardFooter>
+        <SkeletonButton />
+      </CardFooter>
+    </Card>
+  );
 }
 
 async function getUserCourses(userId: string) {
