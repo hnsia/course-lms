@@ -15,6 +15,7 @@ import { asc, eq } from "drizzle-orm";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 import { notFound } from "next/navigation";
 import { ReactNode, Suspense } from "react";
+import { CoursePageClient } from "./_client";
 
 export default async function CoursePageLayout({
   params,
@@ -32,7 +33,9 @@ export default async function CoursePageLayout({
     <div className="grid grid-cols-[300px,1fr] gap-8 container">
       <div className="py-4">
         <div className="text-lg font-semibold">{course.name}</div>
-        <Suspense fallback={"Sidebar"}>
+        <Suspense
+          fallback={<CoursePageClient course={mapCourse(course, [])} />}
+        >
           <SuspenseBoundary course={course} />
         </Suspense>
       </div>
@@ -92,7 +95,7 @@ async function SuspenseBoundary({
   const completedLessonIds =
     userId == null ? [] : await getCompletedLessonIds(userId);
 
-  return "Sidebar";
+  return <CoursePageClient course={mapCourse(course, completedLessonIds)} />;
 }
 
 async function getCompletedLessonIds(userId: string) {
@@ -102,4 +105,35 @@ async function getCompletedLessonIds(userId: string) {
   });
 
   return data.map((d) => d.lessonId);
+}
+
+function mapCourse(
+  course: {
+    name: string;
+    id: string;
+    courseSections: {
+      name: string;
+      id: string;
+      lessons: {
+        name: string;
+        id: string;
+      }[];
+    }[];
+  },
+  completedLessonIds: string[]
+) {
+  return {
+    ...course,
+    courseSections: course.courseSections.map((section) => {
+      return {
+        ...section,
+        lessons: section.lessons.map((lesson) => {
+          return {
+            ...lesson,
+            isComplete: completedLessonIds.includes(lesson.id),
+          };
+        }),
+      };
+    }),
+  };
 }
