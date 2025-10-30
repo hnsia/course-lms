@@ -16,6 +16,7 @@ import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 import { notFound } from "next/navigation";
 import { ReactNode, Suspense } from "react";
 import { CoursePageClient } from "./_client";
+import { getUserLessonCompleteUserTag } from "@/features/lessons/db/cache/userLessonComplete";
 
 export default async function CoursePageLayout({
   params,
@@ -99,6 +100,9 @@ async function SuspenseBoundary({
 }
 
 async function getCompletedLessonIds(userId: string) {
+  "use cache";
+  cacheTag(getUserLessonCompleteUserTag(userId));
+
   const data = await db.query.UserLessonCompleteTable.findMany({
     columns: { lessonId: true },
     where: eq(UserLessonCompleteTable.userId, userId),
