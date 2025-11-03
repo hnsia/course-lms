@@ -1,13 +1,23 @@
+import { ActionButton } from "@/components/ActionButton";
+import { Button } from "@/components/ui/button";
 import { db } from "@/drizzle/db";
-import { LessonStatus, LessonTable } from "@/drizzle/schema";
+import {
+  LessonStatus,
+  LessonTable,
+  UserLessonCompleteTable,
+} from "@/drizzle/schema";
+import { YouTubeVideoPlayer } from "@/features/lessons/components/YouTubeVideoPlayer";
 import { getLessonIdTag } from "@/features/lessons/db/cache/lessons";
+import { getUserLessonCompleteIdTag } from "@/features/lessons/db/cache/userLessonComplete";
 import {
   canViewLesson,
   wherePublicLessons,
 } from "@/features/lessons/permissions/lessons";
 import { getCurrentUser } from "@/services/clerk";
 import { and, eq } from "drizzle-orm";
+import { CheckSquare2Icon, LockIcon, XSquareIcon } from "lucide-react";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -47,7 +57,59 @@ async function SuspenseBoundary({
   courseId: string;
 }) {
   const { userId, role } = await getCurrentUser();
+  const isLessonComplete =
+    userId == null
+      ? false
+      : await getIsLessonComplete({ lessonId: lesson.id, userId });
   const canView = await canViewLesson({ role, userId }, lesson);
+
+  return (
+    <div className="my-4 flex flex-col gap-4">
+      <div className="aspect-video">
+        {canView ? (
+          <YouTubeVideoPlayer
+            videoId={lesson.youtubeVideoId}
+            onFinishedVideo={undefined}
+          />
+        ) : (
+          <div className="flex items-center justify-center bg-primary text-primary-foreground h-full w-full">
+            <LockIcon className="size-16" />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-start gap-4">
+          <h1 className="text-2xl font-semibold">{lesson.name}</h1>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" asChild>
+              <Link href="">Previous</Link>
+            </Button>
+            <ActionButton action={null} variant="outline">
+              <div className="flex gap-2 items-center">
+                {isLessonComplete ? (
+                  <>
+                    <CheckSquare2Icon /> Mark Incomplete
+                  </>
+                ) : (
+                  <>
+                    <XSquareIcon /> Mark Complete
+                  </>
+                )}
+              </div>
+            </ActionButton>
+            <Button variant="outline" asChild>
+              <Link href="">Next</Link>
+            </Button>
+          </div>
+        </div>
+        {canView ? (
+          lesson.description && <p>{lesson.description}</p>
+        ) : (
+          <p>This lesson is locker. Please purchase the course to view it.</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 async function getLesson(id: string) {
@@ -65,4 +127,24 @@ async function getLesson(id: string) {
     },
     where: and(eq(LessonTable.id, id), wherePublicLessons),
   });
+}
+
+async function getIsLessonComplete({
+  userId,
+  lessonId,
+}: {
+  userId: string;
+  lessonId: string;
+}) {
+  "use cache";
+  cacheTag(getUserLessonCompleteIdTag({ userId, lessonId }));
+
+  const data = await db.query.UserLessonCompleteTable.findFirst({
+    where: and(
+      eq(UserLessonCompleteTable.userId, userId),
+      eq(UserLessonCompleteTable.lessonId, lessonId)
+    ),
+  });
+
+  return data != null;
 }
