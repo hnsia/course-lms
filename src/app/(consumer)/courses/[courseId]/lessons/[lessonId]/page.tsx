@@ -6,6 +6,7 @@ import {
   LessonTable,
   UserLessonCompleteTable,
 } from "@/drizzle/schema";
+import { updateLessonCompleteStatus } from "@/features/lessons/actions/userLessonComplete";
 import { YouTubeVideoPlayer } from "@/features/lessons/components/YouTubeVideoPlayer";
 import { getLessonIdTag } from "@/features/lessons/db/cache/lessons";
 import { getUserLessonCompleteIdTag } from "@/features/lessons/db/cache/userLessonComplete";
@@ -13,6 +14,7 @@ import {
   canViewLesson,
   wherePublicLessons,
 } from "@/features/lessons/permissions/lessons";
+import { canUpdateUserLessonCompleteStatus } from "@/features/lessons/permissions/userLessonComplete";
 import { getCurrentUser } from "@/services/clerk";
 import { and, eq } from "drizzle-orm";
 import { CheckSquare2Icon, LockIcon, XSquareIcon } from "lucide-react";
@@ -62,6 +64,10 @@ async function SuspenseBoundary({
       ? false
       : await getIsLessonComplete({ lessonId: lesson.id, userId });
   const canView = await canViewLesson({ role, userId }, lesson);
+  const canUpdateCompletionStatus = await canUpdateUserLessonCompleteStatus(
+    { userId },
+    lesson.id
+  );
 
   return (
     <div className="my-4 flex flex-col gap-4">
@@ -69,7 +75,11 @@ async function SuspenseBoundary({
         {canView ? (
           <YouTubeVideoPlayer
             videoId={lesson.youtubeVideoId}
-            onFinishedVideo={undefined}
+            onFinishedVideo={
+              !isLessonComplete && canUpdateCompletionStatus
+                ? updateLessonCompleteStatus.bind(null, lesson.id, true)
+                : undefined
+            }
           />
         ) : (
           <div className="flex items-center justify-center bg-primary text-primary-foreground h-full w-full">
@@ -84,19 +94,28 @@ async function SuspenseBoundary({
             <Button variant="outline" asChild>
               <Link href="">Previous</Link>
             </Button>
-            <ActionButton action={null} variant="outline">
-              <div className="flex gap-2 items-center">
-                {isLessonComplete ? (
-                  <>
-                    <CheckSquare2Icon /> Mark Incomplete
-                  </>
-                ) : (
-                  <>
-                    <XSquareIcon /> Mark Complete
-                  </>
+            {canUpdateCompletionStatus && (
+              <ActionButton
+                action={updateLessonCompleteStatus.bind(
+                  null,
+                  lesson.id,
+                  !isLessonComplete
                 )}
-              </div>
-            </ActionButton>
+                variant="outline"
+              >
+                <div className="flex gap-2 items-center">
+                  {isLessonComplete ? (
+                    <>
+                      <CheckSquare2Icon /> Mark Incomplete
+                    </>
+                  ) : (
+                    <>
+                      <XSquareIcon /> Mark Complete
+                    </>
+                  )}
+                </div>
+              </ActionButton>
+            )}
             <Button variant="outline" asChild>
               <Link href="">Next</Link>
             </Button>
