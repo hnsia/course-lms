@@ -1,11 +1,14 @@
 import { ActionButton } from "@/components/ActionButton";
+import { SkeletonButton } from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import { db } from "@/drizzle/db";
 import {
+  CourseSectionTable,
   LessonStatus,
   LessonTable,
   UserLessonCompleteTable,
 } from "@/drizzle/schema";
+import { wherePublicCourseSections } from "@/features/courseSections/permissions/sections";
 import { updateLessonCompleteStatus } from "@/features/lessons/actions/userLessonComplete";
 import { YouTubeVideoPlayer } from "@/features/lessons/components/YouTubeVideoPlayer";
 import { getLessonIdTag } from "@/features/lessons/db/cache/lessons";
@@ -16,12 +19,12 @@ import {
 } from "@/features/lessons/permissions/lessons";
 import { canUpdateUserLessonCompleteStatus } from "@/features/lessons/permissions/userLessonComplete";
 import { getCurrentUser } from "@/services/clerk";
-import { and, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
 import { CheckSquare2Icon, LockIcon, XSquareIcon } from "lucide-react";
 import { cacheTag } from "next/dist/server/use-cache/cache-tag";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { ReactNode, Suspense } from "react";
 
 export default async function LessonPage({
   params,
@@ -55,6 +58,7 @@ async function SuspenseBoundary({
     description: string | null;
     status: LessonStatus;
     sectionId: string;
+    order: number;
   };
   courseId: string;
 }) {
@@ -91,9 +95,15 @@ async function SuspenseBoundary({
         <div className="flex justify-between items-start gap-4">
           <h1 className="text-2xl font-semibold">{lesson.name}</h1>
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" asChild>
-              <Link href="">Previous</Link>
-            </Button>
+            <Suspense fallback={<SkeletonButton />}>
+              <ToLessonButton
+                courseId={courseId}
+                lessonFunc={getPreviousLesson}
+                lesson={lesson}
+              >
+                Previous
+              </ToLessonButton>
+            </Suspense>
             {canUpdateCompletionStatus && (
               <ActionButton
                 action={updateLessonCompleteStatus.bind(
@@ -116,9 +126,15 @@ async function SuspenseBoundary({
                 </div>
               </ActionButton>
             )}
-            <Button variant="outline" asChild>
-              <Link href="">Next</Link>
-            </Button>
+            <Suspense fallback={<SkeletonButton />}>
+              <ToLessonButton
+                courseId={courseId}
+                lessonFunc={getNextLesson}
+                lesson={lesson}
+              >
+                Next
+              </ToLessonButton>
+            </Suspense>
           </div>
         </div>
         {canView ? (
@@ -129,6 +145,130 @@ async function SuspenseBoundary({
       </div>
     </div>
   );
+}
+
+async function ToLessonButton({
+  children,
+  courseId,
+  lessonFunc,
+  lesson,
+}: {
+  children: ReactNode;
+  courseId: string;
+  lessonFunc: (lesson: {
+    id: string;
+    sectionId: string;
+    order: number;
+  }) => Promise<{ id: string } | undefined>;
+  lesson: {
+    id: string;
+    sectionId: string;
+    order: number;
+  };
+}) {
+  const toLesson = await lessonFunc(lesson);
+  if (toLesson == null) return null;
+
+  return (
+    <Button variant="outline" asChild>
+      <Link href={`/courses/${courseId}/lessons/${toLesson.id}`}>
+        {children}
+      </Link>
+    </Button>
+  );
+}
+
+async function getPreviousLesson(lesson: {
+  id: string;
+  sectionId: string;
+  order: number;
+}) {
+  let previousLesson = await db.query.LessonTable.findFirst({
+    where: and(
+      lt(LessonTable.order, lesson.order),
+      eq(LessonTable.sectionId, lesson.sectionId),
+      wherePublicLessons
+    ),
+    orderBy: desc(LessonTable.order),
+    columns: { id: true },
+  });
+
+  if (previousLesson == null) {
+    const section = await db.query.CourseSectionTable.findFirst({
+      where: eq(CourseSectionTable.id, lesson.sectionId),
+      columns: { order: true, courseId: true },
+    });
+
+    if (section == null) return;
+
+    const previousSection = await db.query.CourseSectionTable.findFirst({
+      where: and(
+        lt(CourseSectionTable.order, section.order),
+        eq(CourseSectionTable.courseId, section.courseId),
+        wherePublicCourseSections
+      ),
+      orderBy: desc(CourseSectionTable.order),
+      columns: { id: true },
+    });
+
+    if (previousSection == null) return;
+
+    previousLesson = await db.query.LessonTable.findFirst({
+      where: and(
+        eq(LessonTable.sectionId, previousSection.id),
+        wherePublicLessons
+      ),
+      orderBy: desc(LessonTable.order),
+      columns: { id: true },
+    });
+  }
+
+  return previousLesson;
+}
+
+async function getNextLesson(lesson: {
+  id: string;
+  sectionId: string;
+  order: number;
+}) {
+  let nextLesson = await db.query.LessonTable.findFirst({
+    where: and(
+      gt(LessonTable.order, lesson.order),
+      eq(LessonTable.sectionId, lesson.sectionId),
+      wherePublicLessons
+    ),
+    orderBy: asc(LessonTable.order),
+    columns: { id: true },
+  });
+
+  if (nextLesson == null) {
+    const section = await db.query.CourseSectionTable.findFirst({
+      where: eq(CourseSectionTable.id, lesson.sectionId),
+      columns: { order: true, courseId: true },
+    });
+
+    if (section == null) return;
+
+    const nextSection = await db.query.CourseSectionTable.findFirst({
+      where: and(
+        gt(CourseSectionTable.order, section.order),
+        eq(CourseSectionTable.courseId, section.courseId),
+        wherePublicCourseSections
+      ),
+      orderBy: asc(CourseSectionTable.order),
+      columns: { id: true },
+    });
+
+    if (nextSection == null) return;
+
+    nextLesson = await db.query.LessonTable.findFirst({
+      where: and(eq(LessonTable.sectionId, nextSection.id), wherePublicLessons),
+      orderBy: asc(LessonTable.order),
+      columns: { id: true },
+    });
+  }
+
+  return nextLesson;
 }
 
 async function getLesson(id: string) {
@@ -143,6 +283,7 @@ async function getLesson(id: string) {
       description: true,
       status: true,
       sectionId: true,
+      order: true,
     },
     where: and(eq(LessonTable.id, id), wherePublicLessons),
   });
