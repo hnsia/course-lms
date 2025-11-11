@@ -5,7 +5,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { db } from "@/drizzle/db";
-import { PurchaseTable } from "@/drizzle/schema";
+import {
+  CourseSectionTable,
+  CourseTable,
+  LessonTable,
+  ProductTable,
+  PurchaseTable,
+  UserCourseAccessTable,
+} from "@/drizzle/schema";
+import { getCourseGlobalTag } from "@/features/courses/db/cache/courses";
+import { getUserCourseAccessGlobalTag } from "@/features/courses/db/cache/userCourseAccess";
+import { getCourseSectionGlobalTag } from "@/features/courseSections/db/cache";
+import { getLessonGlobalTag } from "@/features/lessons/db/cache/lessons";
+import { getProductGlobalTag } from "@/features/products/db/cache";
 import { getPurchaseGlobalTag } from "@/features/purchases/db/cache";
 import { formatNumber, formatPrice } from "@/lib/formatters";
 import { count, countDistinct, isNotNull, sql, sum } from "drizzle-orm";
@@ -36,6 +48,21 @@ export default async function AdminPage() {
           {formatNumber(averageNetPurchasesPerCustomer, {
             maximumFractionDigits: 2,
           })}
+        </StatCard>
+        <StatCard title="Students">
+          {formatNumber(await getTotalStudents())}
+        </StatCard>
+        <StatCard title="Products">
+          {formatNumber(await getTotalProducts())}
+        </StatCard>
+        <StatCard title="Courses">
+          {formatNumber(await getTotalCourses())}
+        </StatCard>
+        <StatCard title="CourseSections">
+          {formatNumber(await getTotalCourseSections())}
+        </StatCard>
+        <StatCard title="Lessons">
+          {formatNumber(await getTotalLessons())}
         </StatCard>
       </div>
     </div>
@@ -88,4 +115,69 @@ async function getPurchaseDetails() {
     refundedPurchases,
     averageNetPurchasesPerCustomer,
   };
+}
+
+async function getTotalStudents() {
+  "use cache";
+  cacheTag(getUserCourseAccessGlobalTag());
+
+  const [data] = await db
+    .select({ totalStudents: countDistinct(UserCourseAccessTable.userId) })
+    .from(UserCourseAccessTable);
+
+  if (data == null) return 0;
+
+  return data.totalStudents;
+}
+
+async function getTotalCourses() {
+  "use cache";
+  cacheTag(getCourseGlobalTag());
+
+  const [data] = await db
+    .select({ totalCourses: count(CourseTable.id) })
+    .from(CourseTable);
+
+  if (data == null) return 0;
+
+  return data.totalCourses;
+}
+
+async function getTotalProducts() {
+  "use cache";
+  cacheTag(getProductGlobalTag());
+
+  const [data] = await db
+    .select({ totalProducts: count(ProductTable.id) })
+    .from(ProductTable);
+
+  if (data == null) return 0;
+
+  return data.totalProducts;
+}
+
+async function getTotalLessons() {
+  "use cache";
+  cacheTag(getLessonGlobalTag());
+
+  const [data] = await db
+    .select({ totalLessons: count(LessonTable.id) })
+    .from(LessonTable);
+
+  if (data == null) return 0;
+
+  return data.totalLessons;
+}
+
+async function getTotalCourseSections() {
+  "use cache";
+  cacheTag(getCourseSectionGlobalTag());
+
+  const [data] = await db
+    .select({ totalCourseSections: count(CourseSectionTable.id) })
+    .from(CourseSectionTable);
+
+  if (data == null) return 0;
+
+  return data.totalCourseSections;
 }
