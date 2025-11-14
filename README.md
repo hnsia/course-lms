@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Course LMS
+
+This project is a course learning management system (LMS) which sells courses, and allows users to watch the courses on the platform. This project is purely geared towards exploring technologies.
 
 ## Setup
 
